@@ -4,6 +4,7 @@
 cmake_minimum_required (VERSION 3.14)
 
 include(CheckPIESupported)
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if (NOT WAMR_BUILD_PLATFORM STREQUAL "windows")
   project (basic)

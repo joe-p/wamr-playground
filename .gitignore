@@ -1,2 +1,4 @@
 cmake_build/
 out/
+.cache/
+compile_commands.json
