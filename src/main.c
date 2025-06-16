@@ -7,6 +7,7 @@
 #include "platform_common.h"
 #include "program.h"
 #include "wasm_export.h"
+#include "wasm_runtime_common.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -53,7 +54,7 @@ uint8_t *read_file_as_bytes(const char *path, uint32_t *size) {
 
 void my_log(uint32 log_level, const char *file, int line, const char *fmt, ...) {
     char buf[200];
-    snprintf(buf, 200, log_level == WASM_LOG_LEVEL_VERBOSE ? "[WamrLogger - VERBOSE] %s" : "[WamrLogger] %s", fmt);
+    snprintf(buf, 200, log_level == WASM_LOG_LEVEL_VERBOSE ? "[WamrLogger - VERBOSE] %s\n" : "[WamrLogger] %s\n", fmt);
 
     va_list ap;
     va_start(ap, fmt);
@@ -102,13 +103,29 @@ int main(int argc, char *argv_main[]) {
     }
 
     buffer = read_file_as_bytes(wasm_path, &buf_size);
+
+    PackageType package_type = get_package_type(buffer, buf_size);
+
+    printf("Package type for file of size %d: %d\n", buf_size, package_type);
     static char new_heap[512 * 1024];
 
     struct ProgramReturn program_result = {0, ""};
 
-    program_result = run_program((uint8 *)buffer, buf_size, new_heap, sizeof(new_heap));
+    struct timespec start, end;
+    long long elapsed_ns;
 
-    printf("\n\nProgram return value: %lld\n", program_result.return_value);
+    // Start timing
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    program_result = run_program((uint8 *)buffer, buf_size, new_heap, sizeof(new_heap));
+    // End timing
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    // Calculate elapsed time in nanoseconds
+    elapsed_ns = (end.tv_sec - start.tv_sec) * 1e9 + (end.tv_nsec - start.tv_nsec);
+
+    printf("Total time: %lld nanoseconds (%.3f ms)\n", elapsed_ns, elapsed_ns / 1000000.0);
+
+    printf("Program return value: %lld\n", program_result.return_value);
     printf("Program error message: %s\n", program_result.error_message);
 
     return 0;

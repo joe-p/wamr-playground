@@ -63,4 +63,6 @@ fi
 done
 echo "####################build wasm apps done"
 
+${WAMR_DIR}/wamr-compiler/build/wamrc-2.3.1 --size-level=3 --format=aot --cpu=apple-m4 -o ${OUT_DIR}/wasm-apps/testapp.aot ${OUT_DIR}/wasm-apps/testapp.wasm 
+
 wasm-dis ${OUT_DIR}/wasm-apps/*.wasm
