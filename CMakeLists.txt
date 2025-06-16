@@ -79,7 +79,7 @@ add_library(vmlib ${WAMR_RUNTIME_LIB_SOURCE})
 include_directories(${CMAKE_CURRENT_LIST_DIR}/src)
 include (${SHARED_DIR}/utils/uncommon/shared_uncommon.cmake)
 
-add_executable (basic src/main.c src/native_impl.c ${UNCOMMON_SHARED_SOURCE})
+add_executable (basic src/main.c src/native_impl.c src/program.c ${UNCOMMON_SHARED_SOURCE})
 add_executable (free_buffer_early src/free_buffer_early.c ${UNCOMMON_SHARED_SOURCE})
 
 check_pie_supported()

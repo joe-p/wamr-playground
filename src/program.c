@@ -1,18 +1,9 @@
+#include "program.h"
 #include "platform_common.h"
 #include "wasm_export.h"
 #include <stddef.h>
 #include <string.h>
 
-#define ERROR_SIZE 128
-
-struct ProgramReturn {
-    uint64 return_value;
-    char error_message[ERROR_SIZE];
-};
-
-// When calling from go, ensure to pin the heap_buf and wasm_binary
-// pinner.Pin(unsafe.SliceData(data))
-// defer pinner.Unpin()
 struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *heap_buf, size_t heap_size) {
 
     struct ProgramReturn result = {0, ""};

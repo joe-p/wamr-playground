@@ -62,3 +62,5 @@ else
 fi
 done
 echo "####################build wasm apps done"
+
+wasm-dis ${OUT_DIR}/wasm-apps/*.wasm
