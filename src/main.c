@@ -54,7 +54,13 @@ uint8_t *read_file_as_bytes(const char *path, uint32_t *size) {
 
 void my_log(uint32 log_level, const char *file, int line, const char *fmt, ...) {
     char buf[200];
-    snprintf(buf, 200, log_level == WASM_LOG_LEVEL_VERBOSE ? "[WamrLogger - VERBOSE] %s\n" : "[WamrLogger] %s\n", fmt);
+
+    // Add newline to fmt if not present
+    if (fmt[strlen(fmt) - 1] != '\n') {
+        fmt = strcat(strdup(fmt), "\n");
+    }
+
+    snprintf(buf, 200, log_level == WASM_LOG_LEVEL_VERBOSE ? "[WamrLogger - VERBOSE] %s" : "[WamrLogger] %s", fmt);
 
     va_list ap;
     va_start(ap, fmt);
@@ -111,19 +117,7 @@ int main(int argc, char *argv_main[]) {
 
     struct ProgramReturn program_result = {0, ""};
 
-    struct timespec start, end;
-    long long elapsed_ns;
-
-    // Start timing
-    clock_gettime(CLOCK_MONOTONIC, &start);
     program_result = run_program((uint8 *)buffer, buf_size, new_heap, sizeof(new_heap));
-    // End timing
-    clock_gettime(CLOCK_MONOTONIC, &end);
-
-    // Calculate elapsed time in nanoseconds
-    elapsed_ns = (end.tv_sec - start.tv_sec) * 1e9 + (end.tv_nsec - start.tv_nsec);
-
-    printf("Total time: %lld nanoseconds (%.3f ms)\n", elapsed_ns, elapsed_ns / 1000000.0);
 
     printf("Program return value: %lld\n", program_result.return_value);
     printf("Program error message: %s\n", program_result.error_message);

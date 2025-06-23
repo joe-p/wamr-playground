@@ -13,6 +13,9 @@ struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *h
     RuntimeInitArgs init_args;
     wasm_function_inst_t program_func = NULL;
 
+    struct timespec start, end;
+    long long elapsed_ns;
+
     memset(&init_args, 0, sizeof(RuntimeInitArgs));
 
     init_args.mem_alloc_type = Alloc_With_Pool;
@@ -29,6 +32,8 @@ struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *h
 
     uint32 stack_size = 8092;
     char error_buf[ERROR_SIZE];
+
+    clock_gettime(CLOCK_REALTIME, &start);
 
     module = wasm_runtime_load(wasm_binary, binary_size, error_buf, sizeof(error_buf));
 
@@ -55,28 +60,25 @@ struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *h
         goto fail;
     }
 
+    clock_gettime(CLOCK_REALTIME, &end);
+    elapsed_ns = (end.tv_sec - start.tv_sec) * 1e9 + (end.tv_nsec - start.tv_nsec);
+    printf("Load to lookup time: %lld nanoseconds (%.3f ms)\n", elapsed_ns, elapsed_ns / 1000000.0);
+
+    // Measure call time
+    clock_gettime(CLOCK_REALTIME, &start);
+
     wasm_val_t results[1] = {{.kind = WASM_I64, .of.i64 = 0}};
-
-    struct timespec start, end;
-    long long elapsed_ns;
-
-    // Start timing
-    clock_gettime(CLOCK_MONOTONIC, &start);
 
     if (!wasm_runtime_call_wasm_a(exec_env, program_func, 1, results, 0, NULL)) {
         strcpy(result.error_message, wasm_runtime_get_exception(module_inst));
         goto fail;
     }
 
-    // End timing
-    clock_gettime(CLOCK_MONOTONIC, &end);
-
-    // Calculate elapsed time in nanoseconds
-    elapsed_ns = (end.tv_sec - start.tv_sec) * 1e9 + (end.tv_nsec - start.tv_nsec);
-
-    printf("Call time: %lld nanoseconds (%.3f ms)\n", elapsed_ns, elapsed_ns / 1000000.0);
-
     result.return_value = results[0].of.i64;
+
+    clock_gettime(CLOCK_REALTIME, &end);
+    elapsed_ns = (end.tv_sec - start.tv_sec) * 1e9 + (end.tv_nsec - start.tv_nsec);
+    printf("Call time: %lld nanoseconds (%.3f ms)\n", elapsed_ns, elapsed_ns / 1000000.0);
 
 fail:
     if (exec_env)

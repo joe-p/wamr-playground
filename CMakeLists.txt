@@ -52,9 +52,7 @@ set (WAMR_BUILD_AOT 1)
 set (WAMR_BUILD_JIT 0)
 set (WAMR_BUILD_LIBC_BUILTIN 1)
 
-if (NOT MSVC)
-  set (WAMR_BUILD_LIBC_WASI 1)
-endif ()
+set (WAMR_BUILD_LIBC_WASI 0)
 
 if (NOT MSVC)
   # linker flags
