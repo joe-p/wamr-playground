@@ -14,7 +14,6 @@ struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *h
     wasm_function_inst_t program_func = NULL;
 
     struct timespec start, end;
-    long long elapsed_ns;
 
     memset(&init_args, 0, sizeof(RuntimeInitArgs));
 
@@ -61,24 +60,28 @@ struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *h
     }
 
     clock_gettime(CLOCK_REALTIME, &end);
-    elapsed_ns = (end.tv_sec - start.tv_sec) * 1e9 + (end.tv_nsec - start.tv_nsec);
-    printf("Load to lookup time: %lld nanoseconds (%.3f ms)\n", elapsed_ns, elapsed_ns / 1000000.0);
+    long elapsed_ns = end.tv_nsec - start.tv_nsec;
+    printf("Load to lookup time: %ld nanoseconds (%.6f ms)\n", elapsed_ns, elapsed_ns / 1e6);
 
     // Measure call time
     clock_gettime(CLOCK_REALTIME, &start);
 
-    wasm_val_t results[1] = {{.kind = WASM_I64, .of.i64 = 0}};
+    int iters = 1e4;
+    for (int i = 0; i < iters; i++) {
+        wasm_val_t results[1] = {{.kind = WASM_I64, .of.i64 = 0}};
 
-    if (!wasm_runtime_call_wasm_a(exec_env, program_func, 1, results, 0, NULL)) {
-        strcpy(result.error_message, wasm_runtime_get_exception(module_inst));
-        goto fail;
+        if (!wasm_runtime_call_wasm_a(exec_env, program_func, 1, results, 0, NULL)) {
+            strcpy(result.error_message, wasm_runtime_get_exception(module_inst));
+            goto fail;
+        }
+
+        result.return_value = results[0].of.i64;
     }
 
-    result.return_value = results[0].of.i64;
-
     clock_gettime(CLOCK_REALTIME, &end);
-    elapsed_ns = (end.tv_sec - start.tv_sec) * 1e9 + (end.tv_nsec - start.tv_nsec);
-    printf("Call time: %lld nanoseconds (%.3f ms)\n", elapsed_ns, elapsed_ns / 1000000.0);
+
+    long time_per_op = (end.tv_nsec - start.tv_nsec) / iters;
+    printf("Call time: %ld ns/iter (%f ms/%d iters)\n", time_per_op, time_per_op / 1e6, iters);
 
 fail:
     if (exec_env)
