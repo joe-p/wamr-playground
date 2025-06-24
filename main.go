@@ -100,7 +100,7 @@ func main() {
 
 	ctx := context.Background()
 
-	fmt.Println("\n=== Running with Default Runtime ===")
+	fmt.Println("\n=== Running with Interpreter Runtime ===")
 	interpreterConfig := wazero.NewRuntimeConfigInterpreter().WithMemoryCapacityFromMax(true).WithMemoryLimitPages(62)
 	interpreterResult := runProgramWithRuntime(ctx, wasmBinary, interpreterConfig, "Default", iterations)
 
@@ -109,7 +109,7 @@ func main() {
 		fmt.Printf("Program error message: %s\n", interpreterResult.ErrorMessage)
 	}
 
-	fmt.Println("\n=== Running with Compilation Cache Runtime ===")
+	fmt.Println("\n=== Running with Compiler (AOT) Runtime ===")
 	cache, err := wazero.NewCompilationCacheWithDir("wazero-cache")
 	if err != nil {
 		panic(fmt.Sprintf("Error creating compilation cache: %v\n", err))
