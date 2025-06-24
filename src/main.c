@@ -78,22 +78,27 @@ int my_vprintf(const char *format, va_list ap) {
 void print_usage(void) {
     fprintf(stdout, "Options:\r\n");
     fprintf(stdout, "  -f [path of wasm file] \n");
+    fprintf(stdout, "  -i [number of iterations] (default: 10000) \n");
 }
 
 int main(int argc, char *argv_main[]) {
     char *buffer;
     int opt;
     char *wasm_path = NULL;
+    int iterations = 10000;
 
     uint32 buf_size;
 
     RuntimeInitArgs init_args;
     memset(&init_args, 0, sizeof(RuntimeInitArgs));
 
-    while ((opt = getopt(argc, argv_main, "hf:")) != -1) {
+    while ((opt = getopt(argc, argv_main, "hf:i:")) != -1) {
         switch (opt) {
         case 'f':
             wasm_path = optarg;
+            break;
+        case 'i':
+            iterations = atoi(optarg);
             break;
         case 'h':
             print_usage();
@@ -117,7 +122,7 @@ int main(int argc, char *argv_main[]) {
 
     struct ProgramReturn program_result = {0, ""};
 
-    program_result = run_program((uint8 *)buffer, buf_size, new_heap, sizeof(new_heap));
+    program_result = run_program((uint8 *)buffer, buf_size, new_heap, sizeof(new_heap), iterations);
 
     printf("Program return value: %lld\n", program_result.return_value);
     printf("Program error message: %s\n", program_result.error_message);

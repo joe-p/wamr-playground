@@ -16,6 +16,6 @@ struct ProgramReturn {
 // pinner.Pin(unsafe.SliceData(data))
 // defer pinner.Unpin()
 // ```
-struct ProgramReturn run_program(uint8_t *wasm_binary, size_t binary_size, char *heap_buf, size_t heap_size);
+struct ProgramReturn run_program(uint8_t *wasm_binary, size_t binary_size, char *heap_buf, size_t heap_size, int iterations);
 
 #endif // PROGRAM_H 

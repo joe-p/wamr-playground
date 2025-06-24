@@ -26,7 +26,7 @@ func readFile(path string) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-func runProgramWithRuntime(ctx context.Context, wasmBinary []byte, runtimeConfig wazero.RuntimeConfig, runtimeName string) ProgramReturn {
+func runProgramWithRuntime(ctx context.Context, wasmBinary []byte, runtimeConfig wazero.RuntimeConfig, runtimeName string, iterations int) ProgramReturn {
 	result := ProgramReturn{ReturnValue: 0, ErrorMessage: ""}
 
 	runtime := wazero.NewRuntimeWithConfig(ctx, runtimeConfig)
@@ -57,10 +57,9 @@ func runProgramWithRuntime(ctx context.Context, wasmBinary []byte, runtimeConfig
 	loadTime := time.Since(start)
 	fmt.Printf("[%s] Load to lookup time: %v\n", runtimeName, loadTime)
 
-	iters := int(1e4)
 	start = time.Now()
 
-	for range iters {
+	for range iterations {
 		results, err := programFunc.Call(ctx)
 		if err != nil {
 			result.ErrorMessage = fmt.Sprintf("Failed to call program function: %v", err)
@@ -73,20 +72,23 @@ func runProgramWithRuntime(ctx context.Context, wasmBinary []byte, runtimeConfig
 	}
 
 	elapsed := time.Since(start)
-	timePerOp := elapsed / time.Duration(iters)
-	fmt.Printf("[%s] Call time: %v/iter (%v total for %d iters)\n", runtimeName, timePerOp, elapsed, iters)
+	timePerOp := elapsed / time.Duration(iterations)
+	fmt.Printf("[%s] Call time: %v/iter (%v total for %d iters)\n", runtimeName, timePerOp, elapsed, iterations)
 
 	return result
 }
 
 func main() {
 	var wasmPath string
+	var iterations int
 	flag.StringVar(&wasmPath, "f", "", "path of wasm file")
+	flag.IntVar(&iterations, "i", 10000, "number of iterations")
 	flag.Parse()
 
 	if wasmPath == "" {
 		fmt.Println("Options:")
 		fmt.Println("  -f [path of wasm file]")
+		fmt.Println("  -i [number of iterations] (default: 10000)")
 		return
 	}
 
@@ -96,13 +98,11 @@ func main() {
 		return
 	}
 
-	fmt.Printf("File size: %d bytes\n", len(wasmBinary))
-
 	ctx := context.Background()
 
 	fmt.Println("\n=== Running with Default Runtime ===")
 	interpreterConfig := wazero.NewRuntimeConfigInterpreter().WithMemoryCapacityFromMax(true).WithMemoryLimitPages(62)
-	interpreterResult := runProgramWithRuntime(ctx, wasmBinary, interpreterConfig, "Default")
+	interpreterResult := runProgramWithRuntime(ctx, wasmBinary, interpreterConfig, "Default", iterations)
 
 	fmt.Printf("Program return value: %d\n", interpreterResult.ReturnValue)
 	if interpreterResult.ErrorMessage != "" {
@@ -115,7 +115,7 @@ func main() {
 		panic(fmt.Sprintf("Error creating compilation cache: %v\n", err))
 	}
 	compilerConfig := wazero.NewRuntimeConfigCompiler().WithCompilationCache(cache).WithMemoryCapacityFromMax(true).WithMemoryLimitPages(62)
-	compilerResult := runProgramWithRuntime(ctx, wasmBinary, compilerConfig, "Cached")
+	compilerResult := runProgramWithRuntime(ctx, wasmBinary, compilerConfig, "Cached", iterations)
 
 	fmt.Printf("Program return value: %d\n", compilerResult.ReturnValue)
 	if compilerResult.ErrorMessage != "" {

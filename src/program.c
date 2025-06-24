@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 
-struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *heap_buf, size_t heap_size) {
+struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *heap_buf, size_t heap_size, int iterations) {
 
     struct ProgramReturn result = {0, ""};
     wasm_module_inst_t module_inst = NULL;
@@ -66,8 +66,7 @@ struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *h
     // Measure call time
     clock_gettime(CLOCK_REALTIME, &start);
 
-    int iters = 1e4;
-    for (int i = 0; i < iters; i++) {
+    for (int i = 0; i < iterations; i++) {
         wasm_val_t results[1] = {{.kind = WASM_I64, .of.i64 = 0}};
 
         if (!wasm_runtime_call_wasm_a(exec_env, program_func, 1, results, 0, NULL)) {
@@ -80,8 +79,8 @@ struct ProgramReturn run_program(uint8 *wasm_binary, size_t binary_size, char *h
 
     clock_gettime(CLOCK_REALTIME, &end);
 
-    long time_per_op = (end.tv_nsec - start.tv_nsec) / iters;
-    printf("Call time: %ld ns/iter (%f ms/%d iters)\n", time_per_op, time_per_op / 1e6, iters);
+    long time_per_op = (end.tv_nsec - start.tv_nsec) / iterations;
+    printf("Call time: %ld ns/iter (%f ms/%d iters)\n", time_per_op, time_per_op / 1e6, iterations);
 
 fail:
     if (exec_env)
