@@ -101,7 +101,7 @@ func main() {
 	ctx := context.Background()
 
 	fmt.Println("\n=== Running with Default Runtime ===")
-	interpreterConfig := wazero.NewRuntimeConfig()
+	interpreterConfig := wazero.NewRuntimeConfigInterpreter().WithMemoryCapacityFromMax(true).WithMemoryLimitPages(62)
 	interpreterResult := runProgramWithRuntime(ctx, wasmBinary, interpreterConfig, "Default")
 
 	fmt.Printf("Program return value: %d\n", interpreterResult.ReturnValue)
@@ -110,7 +110,11 @@ func main() {
 	}
 
 	fmt.Println("\n=== Running with Compilation Cache Runtime ===")
-	compilerConfig := wazero.NewRuntimeConfig().WithCompilationCache(wazero.NewCompilationCache())
+	cache, err := wazero.NewCompilationCacheWithDir("wazero-cache")
+	if err != nil {
+		panic(fmt.Sprintf("Error creating compilation cache: %v\n", err))
+	}
+	compilerConfig := wazero.NewRuntimeConfigCompiler().WithCompilationCache(cache).WithMemoryCapacityFromMax(true).WithMemoryLimitPages(62)
 	compilerResult := runProgramWithRuntime(ctx, wasmBinary, compilerConfig, "Cached")
 
 	fmt.Printf("Program return value: %d\n", compilerResult.ReturnValue)
@@ -124,4 +128,3 @@ func main() {
 		fmt.Printf("Return values match: %t\n", interpreterResult.ReturnValue == compilerResult.ReturnValue)
 	}
 }
-

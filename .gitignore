@@ -1,3 +1,4 @@
+wazero-cache/
 cmake_build/
 out/
 .cache/
