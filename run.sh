@@ -2,15 +2,15 @@
 
 ITERATIONS=${1:-10000}
 
-./build.sh
+./build-zig.sh
 
 echo "=== Running WAMR WASM ==="
-out/basic -f out/wasm-apps/testapp.wasm -i $ITERATIONS
+zig-out/bin/wamr-zig -f out/wasm-apps/testapp.wasm -i $ITERATIONS
 
 echo ""
 
 echo "=== Running WAMR AOT ==="
-out/basic -f out/wasm-apps/testapp.aot -i $ITERATIONS
+zig-out/bin/wamr-zig -f out/wasm-apps/testapp.aot -i $ITERATIONS
 
 echo ""
 

@@ -1,3 +1,6 @@
+zig-out/
+build/
+.zig-cache/
 wazero-cache/
 cmake_build/
 out/

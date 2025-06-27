@@ -1,38 +1,35 @@
-#
-# Copyright (C) 2019 Intel Corporation.  All rights reserved.
-# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#
-
 #!/bin/bash
+
+# Build script for the Zig version of the WAMR playground
+
+set -e
+
+echo "Building WAMR vmlib with CMake..."
+
+# Create build directory if it doesn't exist
+mkdir -p build
+cd build
+
+# Configure and build with CMake to get the vmlib
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make vmlib
+
+cd ..
+
+echo ""
+echo "Building Zig executable..."
+
+# Build the Zig executable
+zig build
+
+echo ""
+echo "Compiling app to WASM..."
 
 CURR_DIR=$PWD
 WAMR_DIR=${PWD}/wasm-micro-runtime
 OUT_DIR=${PWD}/out
 
 WASM_APPS=${PWD}/wasm-apps
-
-
-rm -rf ${OUT_DIR}
-mkdir ${OUT_DIR}
-mkdir ${OUT_DIR}/wasm-apps
-
-
-echo "#####################build basic project"
-cd ${CURR_DIR}
-mkdir -p cmake_build
-cd cmake_build
-cmake .. -DCMAKE_BUILD_TYPE=Debug -DWAMR_BH_VPRINTF=my_vprintf -DWAMR_BH_LOG=my_log
-make -j ${nproc}
-if [ $? != 0 ];then
-    echo "BUILD_FAIL basic exit as $?\n"
-    exit 2
-fi
-
-cp -a basic ${OUT_DIR}
-
-echo -e "\n"
-
-echo "#####################build wasm apps"
 
 cd ${WASM_APPS}
 
@@ -61,8 +58,12 @@ else
         echo "build ${OUT_FILE} fail"
 fi
 done
-echo "####################build wasm apps done"
+
+echo ""
+
+echo "AOT Compiling WASM bytecode..."
 
 ${WAMR_DIR}/wamr-compiler/build/wamrc-2.3.1 --size-level=3 --format=aot --cpu=apple-m4 -o ${OUT_DIR}/wasm-apps/testapp.aot ${OUT_DIR}/wasm-apps/testapp.wasm 
 
 wasm-dis ${OUT_DIR}/wasm-apps/*.wasm
+

@@ -110,11 +110,12 @@ func main() {
 	}
 
 	fmt.Println("\n=== Running with Compiler (AOT) Runtime ===")
-	cache, err := wazero.NewCompilationCacheWithDir("wazero-cache")
-	if err != nil {
-		panic(fmt.Sprintf("Error creating compilation cache: %v\n", err))
-	}
-	compilerConfig := wazero.NewRuntimeConfigCompiler().WithCompilationCache(cache).WithMemoryCapacityFromMax(true).WithMemoryLimitPages(62)
+	// cache, err := wazero.NewCompilationCacheWithDir("wazero-cache")
+	// if err != nil {
+	// 	panic(fmt.Sprintf("Error creating compilation cache: %v\n", err))
+	// }
+	cache := wazero.NewCompilationCache()
+	compilerConfig := wazero.NewRuntimeConfigCompiler().WithMemoryCapacityFromMax(true).WithMemoryLimitPages(62).WithCompilationCache(cache)
 	compilerResult := runProgramWithRuntime(ctx, wasmBinary, compilerConfig, "Cached", iterations)
 
 	fmt.Printf("Program return value: %d\n", compilerResult.ReturnValue)
