@@ -19,13 +19,7 @@ pub const ProgramReturn = struct {
     }
 };
 
-pub fn runProgram(
-    wasm_binary: [*]u8,
-    binary_size: usize,
-    heap_buf: [*]u8,
-    heap_size: usize,
-    iterations: i32
-) ProgramReturn {
+pub fn runProgram(wasm_binary: [*]u8, binary_size: usize, heap_buf: [*]u8, heap_size: usize, iterations: i32) ProgramReturn {
     var result = ProgramReturn.init();
 
     // Initialize runtime args
@@ -102,12 +96,7 @@ pub fn runProgram(
     _ = c.clock_gettime(c.CLOCK_REALTIME, &end);
 
     const time_per_op = @divTrunc(end.tv_nsec - start.tv_nsec, @as(c_long, iterations));
-    std.debug.print("Call time: {d} ns/iter ({d} ms/{d} iters)\n", .{ 
-        time_per_op, 
-        @as(f64, @floatFromInt(time_per_op)) / 1e6, 
-        iterations 
-    });
+    std.debug.print("Call time: {d} ns/iter ({d} ms/{d} iters)\n", .{ time_per_op, @as(f64, @floatFromInt(time_per_op)) / 1e6, iterations });
 
     return result;
 }
-

@@ -45,15 +45,15 @@ fn myLog(log_level: c.uint32, file: [*c]const u8, line: c_int, fmt: [*c]const u8
     _ = file;
     _ = line;
     _ = args;
-    
+
     var buf: [200]u8 = undefined;
 
     // Add newline to fmt if not present
     const fmt_len = std.mem.len(fmt);
     const needs_newline = fmt_len == 0 or fmt[fmt_len - 1] != '\n';
-    
+
     const log_prefix = if (log_level == c.WASM_LOG_LEVEL_VERBOSE) "[WamrLogger - VERBOSE] " else "[WamrLogger] ";
-    
+
     if (needs_newline) {
         _ = std.fmt.bufPrint(&buf, "{s}{s}\n", .{ log_prefix, fmt }) catch return;
     } else {
@@ -123,14 +123,9 @@ pub fn main() !void {
 
     var new_heap: [512 * 1024]u8 = undefined;
 
-    const program_result = program.runProgram(
-        file_data.data.ptr,
-        file_data.size,
-        &new_heap,
-        new_heap.len,
-        iterations
-    );
+    const program_result = program.runProgram(file_data.data.ptr, file_data.size, &new_heap, new_heap.len, iterations);
 
     std.debug.print("Program return value: {d}\n", .{program_result.return_value});
     std.debug.print("Program error message: {s}\n", .{program_result.error_message});
 }
+
