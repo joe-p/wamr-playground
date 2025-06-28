@@ -74,12 +74,32 @@ pub fn runProgram(wasm_binary: [*]u8, binary_size: usize, heap_buf: [*]u8, heap_
     const elapsed_ns = end.tv_nsec - start.tv_nsec;
     std.debug.print("Load to lookup time: {d} nanoseconds ({d:.6} ms)\n", .{ elapsed_ns, @as(f64, @floatFromInt(elapsed_ns)) / 1e6 });
 
-    // Measure call time
+    // Measure first call time separately
+    _ = c.clock_gettime(c.CLOCK_REALTIME, &start);
+    
+    var results = [_]c.wasm_val_t{c.wasm_val_t{
+        .kind = c.WASM_I64,
+        .of = .{ .i64 = 0 },
+    }};
+
+    if (!c.wasm_runtime_call_wasm_a(exec_env, program_func, 1, &results, 0, null)) {
+        const exception = c.wasm_runtime_get_exception(module_inst);
+        _ = std.fmt.bufPrint(&result.error_message, "{s}", .{exception}) catch {};
+        return result;
+    }
+
+    result.return_value = @intCast(results[0].of.i64);
+    
+    _ = c.clock_gettime(c.CLOCK_REALTIME, &end);
+    const first_call_time = end.tv_nsec - start.tv_nsec;
+    std.debug.print("First call time: {d} nanoseconds ({d:.6} ms)\n", .{ first_call_time, @as(f64, @floatFromInt(first_call_time)) / 1e6 });
+
+    // Measure subsequent calls time
     _ = c.clock_gettime(c.CLOCK_REALTIME, &start);
 
     var i: i32 = 0;
     while (i < iterations) : (i += 1) {
-        var results = [_]c.wasm_val_t{c.wasm_val_t{
+        results = [_]c.wasm_val_t{c.wasm_val_t{
             .kind = c.WASM_I64,
             .of = .{ .i64 = 0 },
         }};
@@ -96,7 +116,7 @@ pub fn runProgram(wasm_binary: [*]u8, binary_size: usize, heap_buf: [*]u8, heap_
     _ = c.clock_gettime(c.CLOCK_REALTIME, &end);
 
     const time_per_op = @divTrunc(end.tv_nsec - start.tv_nsec, @as(c_long, iterations));
-    std.debug.print("Call time: {d} ns/iter ({d} ms/{d} iters)\n", .{ time_per_op, @as(f64, @floatFromInt(time_per_op)) / 1e6, iterations });
+    std.debug.print("Subsequent calls time: {d} ns/iter ({d:.6} ms/{d} iters)\n", .{ time_per_op, @as(f64, @floatFromInt(time_per_op)) / 1e6, iterations });
 
     return result;
 }
