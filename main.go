@@ -135,8 +135,8 @@ func runProgramWithWasmtime(wasmBinary []byte, iterations int) ProgramReturn {
 	}
 
 	if results != nil {
-		if val, ok := results.(int32); ok {
-			result.ReturnValue = int64(val)
+		if val, ok := results.(int64); ok {
+			result.ReturnValue = val
 		}
 	}
 
@@ -207,8 +207,8 @@ func runProgramWithWasmer(wasmBinary []byte, iterations int) ProgramReturn {
 	}
 
 	if results != nil {
-		if val, ok := results.(int32); ok {
-			result.ReturnValue = int64(val)
+		if val, ok := results.(int64); ok {
+			result.ReturnValue = val
 		}
 	}
 
