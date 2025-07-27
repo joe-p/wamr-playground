@@ -76,7 +76,7 @@ pub fn runProgram(wasm_binary: [*]u8, binary_size: usize, heap_buf: [*]u8, heap_
 
     // Measure first call time separately
     _ = c.clock_gettime(c.CLOCK_REALTIME, &start);
-    
+
     var results = [_]c.wasm_val_t{c.wasm_val_t{
         .kind = c.WASM_I64,
         .of = .{ .i64 = 0 },
@@ -89,7 +89,7 @@ pub fn runProgram(wasm_binary: [*]u8, binary_size: usize, heap_buf: [*]u8, heap_
     }
 
     result.return_value = @intCast(results[0].of.i64);
-    
+
     _ = c.clock_gettime(c.CLOCK_REALTIME, &end);
     const first_call_time = end.tv_nsec - start.tv_nsec;
     std.debug.print("First call time: {d} nanoseconds ({d:.6} ms)\n", .{ first_call_time, @as(f64, @floatFromInt(first_call_time)) / 1e6 });
